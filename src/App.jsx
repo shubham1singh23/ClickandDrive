@@ -7,7 +7,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Navbar from './components/Navbar'
 import RentRequests from './components/RentRequests'
 import DriverRequests from './components/DriverRequests'
-
+import ChatBot from './components/Chatbot'
 function App() {
   const [currentUser, setCurrentUser] = useState("");
   const [userEmail, setUserEmail] = useState("");
@@ -73,6 +73,9 @@ function App() {
             />
           </Routes>
         </div>
+
+        {/* ChatBot will only be visible when user is logged in */}
+        {currentUser && <ChatBot userEmail={userEmail} />}
       </div>
     </Router>
   )
