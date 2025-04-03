@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaCar, FaUser, FaSignOutAlt, FaListAlt } from 'react-icons/fa';
+import { FaCar, FaUser, FaSignOutAlt, FaListAlt, FaTruck } from 'react-icons/fa';
 import { getAuth, signOut } from 'firebase/auth';
 import app from './Firebase';
 import './Navbar.css';
@@ -42,15 +42,18 @@ const Navbar = ({ currentUser, userEmail, setCurrentUser, setUserEmail }) => {
             <FaListAlt className="nav-icon" />
             <span>Rent Requests</span>
           </Link>
+          <Link to="/driver-requests" className="nav-link">
+            <FaTruck className="nav-icon" />
+            <span>Driver Requests</span>
+          </Link>
         </div>
 
         <div className="navbar-user">
           {currentUser ? (
             <div className="user-menu">
-              <div className="user-info">
-                <FaUser className="user-icon" />
+              {/* <div className="user-info">
                 <span className="user-email">{userEmail}</span>
-              </div>
+              </div> */}
               <button onClick={handleSignOut} className="sign-out-btn">
                 <FaSignOutAlt className="sign-out-icon" />
                 <span>Sign Out</span>
@@ -58,7 +61,6 @@ const Navbar = ({ currentUser, userEmail, setCurrentUser, setUserEmail }) => {
             </div>
           ) : (
             <Link to="/login" className="login-btn">
-              <FaUser className="login-icon" />
               <span>Login</span>
             </Link>
           )}

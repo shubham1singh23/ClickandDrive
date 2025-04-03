@@ -22,7 +22,8 @@ body.modal-open {
 
 .home-container {
   width: 100%;
-  /* min-height: 100vh; */
+  min-height: 100vh;
+  overflow-y: scroll;
 }
 
 
@@ -135,15 +136,15 @@ body.modal-open {
 /* Hero Section */
 .hero-section {
   position: relative;
-  height: 80vh;
-  min-height: 500px;
+  /* height: 80vh; */
+  /* min-height: 500px; */
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   text-align: center;
   overflow: hidden;
-  margin-top: 600px;
+  /* margin-top: 200px; */
   padding-top: 2rem;
 }
 
@@ -499,7 +500,6 @@ body.modal-open {
   width: 100%;
   height: 20px;
   background: none;
-  -webkit-appearance: none;
   pointer-events: none;
 }
 
@@ -635,8 +635,9 @@ body.modal-open {
 /* Cars Grid */
 .cars-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
+  width: 100%;
 }
 
 .car-card {
@@ -646,6 +647,9 @@ body.modal-open {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
   transition: all 0.3s;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .car-card:hover {
@@ -654,7 +658,8 @@ body.modal-open {
 
 .car-image-container {
   position: relative;
-  height: 180px;
+  width: 100%;
+  height: 200px;
   overflow: hidden;
 }
 
@@ -708,6 +713,10 @@ body.modal-open {
 
 .car-info {
   padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  color: white;
 }
 
 .car-title {
@@ -715,12 +724,13 @@ body.modal-open {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 1rem;
+  color: white !important;
 }
 
 .car-title h3 {
   font-size: 1.2rem;
   font-weight: 600;
-  color: #333;
+  color: #ffffff;
   line-height: 1.3;
 }
 
@@ -736,6 +746,7 @@ body.modal-open {
   display: flex;
   gap: 1rem;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
 }
 
 .feature {
@@ -754,9 +765,9 @@ body.modal-open {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-top: 1px solid #eee;
+  margin-top: auto;
   padding-top: 1rem;
-  margin-top: 0.5rem;
+  border-top: 1px solid #eee;
 }
 
 .price {
@@ -1698,4 +1709,36 @@ input[type="time"] {
 
 .calendar-input::-webkit-calendar-picker-indicator:hover {
   background-color: #3a5ce7;
+}
+
+/* Address Input Styles */
+.address-input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background-color: #f8f9fa;
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+.address-input:hover {
+  border-color: #4a6cf7;
+  background-color: #ffffff;
+}
+
+.address-input:focus {
+  outline: none;
+  border-color: #4a6cf7;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(74, 108, 247, 0.1);
+}
+
+.address-hint {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #666;
 }

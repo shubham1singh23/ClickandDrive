@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import RentRequests from './components/RentRequests'
+import DriverRequests from './components/DriverRequests'
 
 function App() {
   const [currentUser, setCurrentUser] = useState("");
@@ -59,6 +60,14 @@ function App() {
               element={
                 currentUser ?
                   <RentRequests currentUser={currentUser} userEmail={userEmail} /> :
+                  <Navigate to="/login" />
+              }
+            />
+            <Route
+              path="/driver-requests"
+              element={
+                currentUser ?
+                  <DriverRequests currentUser={currentUser} userEmail={userEmail} /> :
                   <Navigate to="/login" />
               }
             />

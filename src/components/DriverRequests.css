@@ -1,0 +1,382 @@
+.driver-requests-container {
+  padding: 2rem;
+  /* max-width: 1200px;
+   */
+   width: 95vw;
+  margin: 0 auto;
+  /* min-height: 100vh; */
+  background-color: #323232;
+  /* margin-top: 1000px;  */
+  color: white;
+  overflow-y: auto;
+}
+
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: rgb(24, 24, 24);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  color: white;
+}
+
+.header-section h1 {
+  color: #333;
+  font-size: 2rem;
+  margin: 0;
+}
+
+.filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.5rem;
+  background: #4a6cf7;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.filter-toggle:hover {
+  background: #3a5ce7;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 108, 247, 0.2);
+}
+
+.filters-section {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  animation: slideDown 0.3s ease;
+}
+
+.city-select {
+  width: 100%;
+  padding: 0.8rem;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #333;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.city-select:hover {
+  border-color: #4a6cf7;
+}
+
+.city-select:focus {
+  outline: none;
+  border-color: #4a6cf7;
+  box-shadow: 0 0 0 4px rgba(74, 108, 247, 0.1);
+}
+
+.requests-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.request-card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  animation: fadeIn 0.5s ease;
+}
+
+.request-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+}
+
+.request-header {
+  padding: 1.2rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.request-type {
+  font-weight: 600;
+}
+
+.delivery {
+  color: #4a6cf7;
+  font-size: 1.1rem;
+}
+
+.request-status {
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.status {
+  text-transform: capitalize;
+}
+
+.status.accepted {
+  background: #d4edda;
+  color: #155724;
+}
+
+.request-details {
+  padding: 1.5rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.car-info,
+.location-info,
+.booking-info,
+.pickup-info,
+.drop-info,
+.driver-time-info,
+.duration-info,
+.contact-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.car-info {
+  background: #e7f0ff;
+  border: 1px solid #4a6cf7;
+}
+
+.pickup-info, .drop-info {
+  background: #fff8e1;
+  border: 1px solid #ffb300;
+}
+
+.driver-time-info {
+  background: #ffebee;
+  border: 1px solid #ff5252;
+}
+
+.contact-info {
+  background: #e8f5e9;
+  border: 1px solid #4caf50;
+}
+
+.car-info .icon {
+  font-size: 1.5rem;
+  color: #4a6cf7;
+  margin-top: 0.2rem;
+}
+
+.pickup-info .icon, .drop-info .icon {
+  font-size: 1.2rem;
+  color: #f57c00;
+  margin-top: 0.2rem;
+}
+
+.driver-time-info .icon {
+  font-size: 1.2rem;
+  color: #e53935;
+  margin-top: 0.2rem;
+}
+
+.contact-info .icon {
+  font-size: 1.2rem;
+  color: #43a047;
+  margin-top: 0.2rem;
+}
+
+.icon {
+  font-size: 1.2rem;
+  color: #666;
+  margin-top: 0.2rem;
+}
+
+.request-details h3 {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.3rem;
+}
+
+.request-details p {
+  font-size: 1rem;
+  color: #333;
+  font-weight: 500;
+  margin: 0;
+  margin-bottom: 0.5rem;
+}
+
+.request-details p:last-child {
+  margin-bottom: 0;
+}
+
+.request-details p small {
+  color: #666;
+  font-weight: normal;
+}
+
+.request-actions {
+  padding: 1rem;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 1rem;
+}
+
+.accept-btn {
+  flex: 1;
+  padding: 0.8rem;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.accept-btn:hover {
+  background: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+}
+
+.no-requests {
+  text-align: center;
+  padding: 3rem;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin-top: 2rem;
+}
+
+.no-requests-icon {
+  font-size: 4rem;
+  color: #ccc;
+  margin-bottom: 1rem;
+}
+
+.no-requests h2 {
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.no-requests p {
+  color: #666;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.loader {
+  font-size: 1.2rem;
+  color: #666;
+  animation: pulse 1.5s infinite;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .driver-requests-container {
+    padding: 1rem;
+  }
+
+  .header-section {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .header-section h1 {
+    font-size: 1.8rem;
+  }
+
+  .requests-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .request-card {
+    margin-bottom: 1rem;
+  }
+
+  .request-details {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .header-section h1 {
+    font-size: 1.5rem;
+  }
+
+  .request-header {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+
+  .request-actions {
+    flex-direction: column;
+  }
+
+  .accept-btn {
+    width: 100%;
+  }
+}

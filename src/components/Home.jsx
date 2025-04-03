@@ -18,7 +18,8 @@ const Home = ({ currentUser, userEmail }) => {
     pickupTime: '',
     duration: 1,
     startTime: null,
-    endTime: null
+    endTime: null,
+    dropAddress: ''
   });
   const [bookingStatus, setBookingStatus] = useState(null);
   const [bookingError, setBookingError] = useState(null);
@@ -281,8 +282,8 @@ const Home = ({ currentUser, userEmail }) => {
     e.preventDefault();
     setBookingError(null);
 
-    if (!bookingData.bookingDate || !bookingData.pickupTime) {
-      setBookingError('Please select both date and pickup time');
+    if (!bookingData.bookingDate || !bookingData.pickupTime || !bookingData.dropAddress) {
+      setBookingError('Please fill in all required fields');
       return;
     }
 
@@ -312,7 +313,7 @@ const Home = ({ currentUser, userEmail }) => {
         carBrand: selectedCar.carBrand,
         carModel: selectedCar.carModel,
         carType: selectedCar.carType,
-        carOwnerId: selectedCar.userId,
+        ownerId: selectedCar.userId,
         ownerEmail: selectedCar.userEmail,
         renterId: currentUser,
         renterEmail: userEmail,
@@ -322,7 +323,9 @@ const Home = ({ currentUser, userEmail }) => {
         totalPrice: totalPrice,
         status: 'pending',
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        pickupAddress: selectedCar.address,
+        dropAddress: bookingData.dropAddress
       };
 
       // Push the booking request to Firebase
@@ -877,6 +880,20 @@ const Home = ({ currentUser, userEmail }) => {
                             required
                             className="time-input"
                           />
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="dropAddress">Drop-off Address</label>
+                          <textarea
+                            id="dropAddress"
+                            value={bookingData.dropAddress}
+                            onChange={(e) => setBookingData({ ...bookingData, dropAddress: e.target.value })}
+                            placeholder="Enter your drop-off address"
+                            required
+                            className="address-input"
+                            rows="3"
+                          />
+                          <div className="address-hint">Please provide the complete address where you'll drop off the car</div>
                         </div>
 
                         <div className="form-group">

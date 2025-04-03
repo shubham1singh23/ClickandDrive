@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getDatabase, ref, onValue, update } from 'firebase/database';
 import app from './Firebase';
 import './RentRequests.css';
-import { FaCar, FaUser, FaCalendarAlt, FaClock, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaCar, FaUser, FaCalendarAlt, FaClock, FaCheck, FaTimes, FaMapMarkerAlt } from 'react-icons/fa';
 
 const RentRequests = ({ currentUser, userEmail }) => {
   const [requests, setRequests] = useState([]);
@@ -20,10 +20,19 @@ const RentRequests = ({ currentUser, userEmail }) => {
             id,
             ...details
           }));
-          // Filter requests to show only those related to the current user
-          const userRequests = requestsArray.filter(
-            request => request.carOwnerId === currentUser || request.renterId === currentUser
+
+          // Enhanced filtering logic to check both ID and email fields
+          const userRequests = requestsArray.filter(request =>
+            // Check for owner by ID
+            request.carOwnerId === currentUser ||
+            // Check for owner by email
+            request.ownerEmail === userEmail ||
+            // Check for renter by ID
+            request.renterId === currentUser ||
+            // Check for renter by email
+            request.renterEmail === userEmail
           );
+
           setRequests(userRequests);
         } else {
           setRequests([]);
@@ -33,7 +42,7 @@ const RentRequests = ({ currentUser, userEmail }) => {
     };
 
     fetchRequests();
-  }, [currentUser]);
+  }, [currentUser, userEmail]); // Added userEmail to dependencies
 
   const handleRequestAction = async (requestId, action) => {
     const database = getDatabase(app);
@@ -74,7 +83,7 @@ const RentRequests = ({ currentUser, userEmail }) => {
             <div key={request.id} className="request-card">
               <div className="request-header">
                 <div className="request-type">
-                  {request.carOwnerId === currentUser ? (
+                  {request.carOwnerId === currentUser || request.ownerEmail === userEmail ? (
                     <span className="incoming">Incoming Request</span>
                   ) : (
                     <span className="outgoing">Your Request</span>
@@ -97,8 +106,12 @@ const RentRequests = ({ currentUser, userEmail }) => {
                 <div className="user-info">
                   <FaUser className="icon" />
                   <div>
-                    <h3>{request.carOwnerId === currentUser ? request.renterEmail : request.ownerEmail}</h3>
-                    <p>{request.carOwnerId === currentUser ? 'Renter' : 'Car Owner'}</p>
+                    <h3>{(request.carOwnerId === currentUser || request.ownerEmail === userEmail)
+                      ? request.renterEmail
+                      : request.ownerEmail}</h3>
+                    <p>{(request.carOwnerId === currentUser || request.ownerEmail === userEmail)
+                      ? 'Renter'
+                      : 'Car Owner'}</p>
                   </div>
                 </div>
 
@@ -110,8 +123,16 @@ const RentRequests = ({ currentUser, userEmail }) => {
                   </div>
                 </div>
 
-                <div className="duration-info">
+                <div className="pickup-info">
                   <FaClock className="icon" />
+                  <div>
+                    <h3>Pickup Time</h3>
+                    <p>{request.pickupTime}</p>
+                  </div>
+                </div>
+
+                <div className="duration-info">
+                  <FaMapMarkerAlt className="icon" />
                   <div>
                     <h3>Duration</h3>
                     <p>{request.duration} hours</p>
@@ -119,7 +140,7 @@ const RentRequests = ({ currentUser, userEmail }) => {
                 </div>
               </div>
 
-              {request.status === 'pending' && request.carOwnerId === currentUser && (
+              {request.status === 'pending' && (request.carOwnerId === currentUser || request.ownerEmail === userEmail) && (
                 <div className="request-actions">
                   <button
                     className="accept-btn"
@@ -143,4 +164,4 @@ const RentRequests = ({ currentUser, userEmail }) => {
   );
 };
 
-export default RentRequests; 
+export default RentRequests;
