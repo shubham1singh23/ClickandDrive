@@ -62,7 +62,14 @@ const MyCar = ({ currentUser }) => {
     try {
       const carRef = ref(db, `cars/${carData.id}`);
       const updates = {
-        ...carData,
+        pricePerHour: carData.pricePerHour,
+        location: carData.location,
+        address: carData.address,
+        seatingCapacity: carData.seatingCapacity,
+        transmission: carData.transmission,
+        fuelType: carData.fuelType,
+        carType: carData.carType,
+        rentingEnabled: carData.rentingEnabled,
         updatedAt: new Date().toISOString()
       };
       await update(carRef, updates);
@@ -72,6 +79,18 @@ const MyCar = ({ currentUser }) => {
       setError('Error updating car');
     }
   }, [db]);
+
+  const toggleRenting = async (car, enabled) => {
+    try {
+      const carRef = ref(db, `cars/${car.id}`);
+      await update(carRef, {
+        rentingEnabled: enabled,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (err) {
+      setError('Error updating car status');
+    }
+  };
 
   // Memoized car cards
   const carCards = useMemo(() => {
@@ -98,6 +117,19 @@ const MyCar = ({ currentUser }) => {
           <p className="car-price">₹{car.pricePerHour}/hour</p>
         </div>
         <div className="car-actions">
+          <div className="renting-toggle">
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={car.rentingEnabled !== false}
+                onChange={(e) => toggleRenting(car, e.target.checked)}
+              />
+              <span className="slider round"></span>
+            </label>
+            <span className="toggle-label">
+              {car.rentingEnabled !== false ? 'Available for Rent' : 'Not Available'}
+            </span>
+          </div>
           <button
             className="edit-btn"
             onClick={() => {
@@ -167,7 +199,71 @@ const MyCar = ({ currentUser }) => {
                 e.preventDefault();
                 handleEdit(editingCar);
               }}>
-                {/* Form fields */}
+                <div className="form-group">
+                  <label>Car Type</label>
+                  <select
+                    value={editingCar.carType}
+                    onChange={(e) => setEditingCar({
+                      ...editingCar,
+                      carType: e.target.value
+                    })}
+                    required
+                  >
+                    <option value="Sedan">Sedan</option>
+                    <option value="SUV">SUV</option>
+                    <option value="Hatchback">Hatchback</option>
+                    <option value="Luxury">Luxury</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Transmission</label>
+                  <select
+                    value={editingCar.transmission}
+                    onChange={(e) => setEditingCar({
+                      ...editingCar,
+                      transmission: e.target.value
+                    })}
+                    required
+                  >
+                    <option value="Manual">Manual</option>
+                    <option value="Automatic">Automatic</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Fuel Type</label>
+                  <select
+                    value={editingCar.fuelType}
+                    onChange={(e) => setEditingCar({
+                      ...editingCar,
+                      fuelType: e.target.value
+                    })}
+                    required
+                  >
+                    <option value="Petrol">Petrol</option>
+                    <option value="Diesel">Diesel</option>
+                    <option value="Electric">Electric</option>
+                    <option value="Hybrid">Hybrid</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Seating Capacity</label>
+                  <select
+                    value={editingCar.seatingCapacity}
+                    onChange={(e) => setEditingCar({
+                      ...editingCar,
+                      seatingCapacity: e.target.value
+                    })}
+                    required
+                  >
+                    {[2, 4, 5, 6, 7, 8].map(num => (
+                      <option key={num} value={num}>{num}</option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="form-group">
                   <label>Price per Hour (₹)</label>
                   <input
@@ -179,6 +275,32 @@ const MyCar = ({ currentUser }) => {
                     })}
                     min="0"
                     required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Location</label>
+                  <input
+                    type="text"
+                    value={editingCar.location}
+                    onChange={(e) => setEditingCar({
+                      ...editingCar,
+                      location: e.target.value
+                    })}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Complete Address</label>
+                  <textarea
+                    value={editingCar.address}
+                    onChange={(e) => setEditingCar({
+                      ...editingCar,
+                      address: e.target.value
+                    })}
+                    required
+                    rows="3"
                   />
                 </div>
 

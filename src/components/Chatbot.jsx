@@ -14,7 +14,7 @@ const parseMarkdown = (text) => {
   // Replace bold formatting (**text** or __text__)
   let parsed = text.replace(/(\*\*|__)(.*?)\1/g, '<strong>$2</strong>');
 
-  // Replace italic formatting (*text* or _text_)
+  // Replace italic formatting (*text* or _text*)
   parsed = parsed.replace(/(\*|_)(.*?)\1/g, '<em>$2</em>');
 
   // Replace bullet points
@@ -37,7 +37,7 @@ const ChatBot = ({ userEmail, onFilterUpdate }) => {
   const [messages, setMessages] = useState([
     { id: 1, text: "Hi there! I'm your car rental assistant. How can I help you today?", sender: "bot" }
   ]);
-  const [inputMessage, setInputMessage] = useState('');
+  const [inputMessage, setInputMessage] = useState('suggest a car for ');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -52,6 +52,9 @@ const ChatBot = ({ userEmail, onFilterUpdate }) => {
     scrollToBottom();
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
+      // Set cursor position at the end of the text
+      inputRef.current.selectionStart = inputRef.current.value.length;
+      inputRef.current.selectionEnd = inputRef.current.value.length;
     }
   }, [messages, isOpen]);
 
@@ -60,11 +63,12 @@ const ChatBot = ({ userEmail, onFilterUpdate }) => {
   };
 
   const handleInputChange = (e) => {
-    setInputMessage(e.target.value);
+    const value = e.target.value;
+    setInputMessage(value);
   };
 
   const sendMessage = async () => {
-    if (inputMessage.trim() === '') return;
+    if (inputMessage.trim() === 'suggest a car for') return;
 
     const newUserMessage = {
       id: messages.length + 1,
@@ -73,7 +77,7 @@ const ChatBot = ({ userEmail, onFilterUpdate }) => {
     };
 
     setMessages([...messages, newUserMessage]);
-    setInputMessage('');
+    setInputMessage('suggest a car for ');
     setIsLoading(true);
 
     try {
@@ -212,8 +216,9 @@ const ChatBot = ({ userEmail, onFilterUpdate }) => {
     
     Available Filters:
     1. Car Types: Sedan, SUV, Hatchback, Luxury
-    2. Car Brands: Toyota, Honda, Ford, BMW, Mercedes, Audi, Hyundai, Kia, Volkswagen, Nissan
-    3. Seating Capacity: 2, 4, 5, 6, 7, 8 people
+   
+    2. Car Brands: Toyota, Honda, Ford, BMW, Mercedes, Audi, Hyundai, Kia, Volkswagen, Nissan and other famous car brands you can find it  on internet
+    3. Seating Capacity: 2, 4, 5, 7, 8 dont filter any seating capacity until asked
     4. Price Range: Min to Max in ₹ per hour
     5. Fuel Types: Petrol, Diesel, Electric, Hybrid
     6. Transmission: Manual, Automatic
@@ -223,7 +228,7 @@ const ChatBot = ({ userEmail, onFilterUpdate }) => {
       "filters": {
         "carTypes": ["type1", "type2"],
         "carBrands": ["brand1", "brand2"],
-        "seatingCapacities": [number],
+        "seatingCapacities": [number],//suggest all seating capacities from 2 to required number
         "priceRange": { "min": number, "max": number },
         "fuelTypes": ["type1", "type2"],
         "transmission": ["type1", "type2"]
@@ -276,6 +281,19 @@ const ChatBot = ({ userEmail, onFilterUpdate }) => {
       throw error;
     }
   };
+
+  // Add event listener for toggling chatbot
+  useEffect(() => {
+    const handleToggleEvent = () => {
+      setIsOpen(true);
+    };
+
+    window.addEventListener('toggleChatbot', handleToggleEvent);
+
+    return () => {
+      window.removeEventListener('toggleChatbot', handleToggleEvent);
+    };
+  }, []);
 
   return (
     <div className="chatbot-container">
@@ -340,14 +358,14 @@ const ChatBot = ({ userEmail, onFilterUpdate }) => {
             value={inputMessage}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
-            placeholder="Ask about car rentals..."
+            placeholder="suggest a car for..."
             ref={inputRef}
             aria-label="Message input"
           />
           <button
             className="send-button"
             onClick={sendMessage}
-            disabled={inputMessage.trim() === '' || isLoading}
+            disabled={inputMessage.trim() === 'suggest a car for' || isLoading}
             aria-label="Send message"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -187,6 +187,9 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
   };
 
   const filteredCars = cars.filter(car => {
+    // Only show cars where rentingEnabled is not false
+    const isAvailable = car.rentingEnabled !== false;
+
     // Search filter
     const matchesSearch =
       car.carBrand.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -217,7 +220,7 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
       car.pricePerHour >= activeFilters.priceRange.min &&
       car.pricePerHour <= activeFilters.priceRange.max;
 
-    return matchesSearch && matchesLocation && matchesType && matchesBrand && matchesSeating && matchesPrice;
+    return isAvailable && matchesSearch && matchesLocation && matchesType && matchesBrand && matchesSeating && matchesPrice;
   });
 
   // Function to check if car belongs to current user
@@ -277,7 +280,6 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
     }
   };
 
-  // Update handleBookingSubmit
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
     setBookingError(null);
@@ -305,7 +307,7 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
       const rentRequestsRef = ref(database, 'rentRequests');
 
       // Calculate total price
-      const totalPrice = selectedCar.pricePerHour * bookingData.duration;
+      const totalPrice = parseFloat(selectedCar.pricePerHour) * parseInt(bookingData.duration);
 
       // Create booking request
       const bookingRequest = {
@@ -319,9 +321,9 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
         renterEmail: userEmail,
         bookingDate: bookingData.bookingDate,
         pickupTime: bookingData.pickupTime,
-        duration: bookingData.duration,
-        totalPrice: totalPrice,
-        status: 'pending',
+        duration: parseInt(bookingData.duration),
+        totalPrice: totalPrice, // Make sure totalPrice is a number
+        status: 'accepted',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         pickupAddress: selectedCar.address,
@@ -333,16 +335,16 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
       await set(newRequestRef, bookingRequest);
 
       // Update UI state
-      setBookingStatus('pending');
+      setBookingStatus('accepted'); // Changed from 'pending' to 'accepted'
       setShowBookingForm(false);
       closeModal();
 
       // Show success message
-      alert('Booking request sent successfully! You can track the status in your Rent Requests section.');
+      alert('Car booked successfully! You can view your booking in the Rent Requests section.');
 
     } catch (error) {
       console.error('Error submitting booking request:', error);
-      setBookingError('Failed to submit booking request. Please try again.');
+      setBookingError('Failed to book car. Please try again.');
     }
   };
 
@@ -407,6 +409,15 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
       });
     }
   }, [suggestedFilters]);
+
+  const handleBookClick = () => {
+    if (!currentUser) {
+      alert('Please login to book a car');
+      navigate('/login');
+      return;
+    }
+    setShowBookingForm(true);
+  };
 
   if (loading) {
     return (
@@ -862,7 +873,7 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
                     ) : !showBookingForm ? (
                       <button
                         className="book-now-button"
-                        onClick={() => setShowBookingForm(true)}
+                        onClick={handleBookClick}
                       >
                         Book This Car
                       </button>
