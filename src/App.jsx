@@ -6,11 +6,18 @@ import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import RentRequests from './components/RentRequests'
-import DriverRequests from './components/DriverRequests'
+// import DriverRequests from './components/DriverRequests'
 import ChatBot from './components/Chatbot'
+import MyCar from './components/MyCar'
+
 function App() {
   const [currentUser, setCurrentUser] = useState("");
   const [userEmail, setUserEmail] = useState("");
+  const [globalFilters, setGlobalFilters] = useState(null);
+
+  const handleFilterUpdate = (filters) => {
+    setGlobalFilters(filters);
+  };
 
   return (
     <Router>
@@ -35,7 +42,7 @@ function App() {
               path="/"
               element={
                 currentUser ?
-                  <Home currentUser={currentUser} userEmail={userEmail} /> :
+                  <Home currentUser={currentUser} userEmail={userEmail} suggestedFilters={globalFilters} /> :
                   <Navigate to="/login" />
               }
             />
@@ -64,10 +71,10 @@ function App() {
               }
             />
             <Route
-              path="/driver-requests"
+              path="/my-cars"
               element={
                 currentUser ?
-                  <DriverRequests currentUser={currentUser} userEmail={userEmail} /> :
+                  <MyCar currentUser={currentUser} /> :
                   <Navigate to="/login" />
               }
             />
@@ -75,7 +82,7 @@ function App() {
         </div>
 
         {/* ChatBot will only be visible when user is logged in */}
-        {currentUser && <ChatBot userEmail={userEmail} />}
+        {currentUser && <ChatBot userEmail={userEmail} onFilterUpdate={handleFilterUpdate} />}
       </div>
     </Router>
   )

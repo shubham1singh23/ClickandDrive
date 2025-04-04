@@ -5,6 +5,12 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
 }
 
 body {
@@ -24,6 +30,8 @@ body.modal-open {
   width: 100%;
   min-height: 100vh;
   overflow-y: scroll;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 
@@ -767,7 +775,8 @@ body.modal-open {
   align-items: center;
   margin-top: auto;
   padding-top: 1rem;
-  border-top: 1px solid #eee;
+  /* Remove the border-top line that's causing the extra border */
+  /* border-top: 1px solid #eee; */
 }
 
 .price {
@@ -854,6 +863,8 @@ body.modal-open {
 .modal-content {
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  max-height: 90vh;
 }
 
 @media (min-width: 768px) {

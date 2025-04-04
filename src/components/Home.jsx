@@ -6,7 +6,7 @@ import './Home.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaFilter, FaSearch, FaCar, FaMapMarkerAlt, FaUsers, FaGasPump, FaCog, FaCalendarAlt, FaMoneyBillWave, FaTimes, FaPlus } from 'react-icons/fa';
 
-const Home = ({ currentUser, userEmail }) => {
+const Home = ({ currentUser, userEmail, suggestedFilters }) => {
   const navigate = useNavigate();
   const [cars, setCars] = useState([]);
   const [selectedCar, setSelectedCar] = useState(null);
@@ -387,6 +387,26 @@ const Home = ({ currentUser, userEmail }) => {
       console.error('Error checking existing request:', error);
     }
   };
+
+  // Apply suggested filters when they change
+  useEffect(() => {
+    if (suggestedFilters) {
+      setFilters(prevFilters => ({
+        ...prevFilters,
+        ...suggestedFilters,
+      }));
+      setActiveFilters(prevFilters => ({
+        ...prevFilters,
+        ...suggestedFilters,
+      }));
+      setShowFilters(true); // Show the filters panel
+
+      // Scroll to results
+      document.querySelector('.main-content')?.scrollIntoView({
+        behavior: 'smooth'
+      });
+    }
+  }, [suggestedFilters]);
 
   if (loading) {
     return (

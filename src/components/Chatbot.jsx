@@ -32,7 +32,7 @@ const parseMarkdown = (text) => {
   return parsed;
 };
 
-const ChatBot = ({ userEmail }) => {
+const ChatBot = ({ userEmail, onFilterUpdate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     { id: 1, text: "Hi there! I'm your car rental assistant. How can I help you today?", sender: "bot" }
@@ -77,37 +77,46 @@ const ChatBot = ({ userEmail }) => {
     setIsLoading(true);
 
     try {
-      // Call to Gemini API
       const response = await fetchGeminiResponse(inputMessage);
 
-      // Parse markdown in the response
-      const parsedResponse = parseMarkdown(response);
+      // Check if response contains filter suggestions
+      if (response.includes('{') && response.includes('}')) {
+        try {
+          // Extract JSON from response
+          const jsonStr = response.substring(
+            response.indexOf('{'),
+            response.lastIndexOf('}') + 1
+          );
+          const filterData = JSON.parse(jsonStr);
 
-      const newBotMessage = {
-        id: messages.length + 2,
-        text: parsedResponse,
-        sender: "bot",
-        isHtml: true // Flag to indicate HTML content
-      };
+          // Apply filters through callback
+          if (filterData.filters) {
+            onFilterUpdate(filterData.filters);
+            // Close the chat window after applying filters
+            setIsOpen(false);
+          }
 
-      setMessages(prevMessages => [...prevMessages, newBotMessage]);
-
-      // Update conversation history for context
-      setConversationHistory(prev => [
-        ...prev,
-        { role: 'user', parts: [{ text: inputMessage }] },
-        { role: 'model', parts: [{ text: response }] } // Keep original response in history
-      ]);
+          // Add explanation to chat
+          const newBotMessage = {
+            id: messages.length + 2,
+            text: filterData.explanation,
+            sender: "bot"
+          };
+          setMessages(prevMessages => [...prevMessages, newBotMessage]);
+        } catch (error) {
+          console.error("Error parsing filter JSON:", error);
+        }
+      } else {
+        // Regular chat response
+        const newBotMessage = {
+          id: messages.length + 2,
+          text: response,
+          sender: "bot"
+        };
+        setMessages(prevMessages => [...prevMessages, newBotMessage]);
+      }
     } catch (error) {
-      console.error("Error fetching response from Gemini:", error);
-
-      const errorMessage = {
-        id: messages.length + 2,
-        text: "Sorry, I couldn't process your request. Please try again.",
-        sender: "bot"
-      };
-
-      setMessages(prevMessages => [...prevMessages, errorMessage]);
+      console.error("Error fetching response:", error);
     } finally {
       setIsLoading(false);
     }
@@ -121,25 +130,108 @@ const ChatBot = ({ userEmail }) => {
 
   // Function to fetch response from Gemini API
   const fetchGeminiResponse = async (userMessage) => {
-    // Create a system prompt that contextualizes the chatbot for car rental assistance
-    const systemPrompt = `You are a helpful customer service assistant for a car rental application. 
-      The app allows users to rent cars from others, add their own cars to be rented, and request drivers. 
-      Provide helpful, concise, and accurate information about car rentals, the process, pricing, and policies. 
-      The user's email is ${userEmail}. 
-      
-      When responding to user queries:
-      - Be polite and professional
-      - Provide specific information about how to use the car rental platform
-      - If you don't know specific details about their account or bookings, explain that they can check those details in the appropriate section of the app
-      - Keep responses concise but complete
-      - You may use markdown formatting for emphasis (bold with ** or italic with *) when appropriate
-      
-      Current features of the app include:
-      - Browsing available cars
-      - Adding your own car to the platform
-      - Making rental requests
-      - Requesting drivers
-      - Viewing rental and driver requests`;
+    // Updated system prompt in fetchGeminiResponse function
+    const systemPrompt = `You are an intelligent, highly professional, and friendly **customer support assistant** for ClicknDrive, a cutting-edge **car rental platform**. Your role is to assist users by providing **clear, accurate, and engaging** responses about the platform, its features, and the rental process.  
+
+    ### **General Guidelines for Responses:**  
+    - Be **polite, professional, and user-friendly**.  
+    - Provide **step-by-step guidance** when explaining platform features.  
+    - **Personalize responses** when possible using the user's email: ${userEmail}.  
+    - Use **markdown formatting** for readability (e.g., **bold** for key points, *italic* for emphasis).  
+    - Keep responses **concise yet informative** to ensure users get all necessary details without feeling overwhelmed.  
+    - Anticipate potential follow-up questions and **offer proactive solutions**.  
+    
+    ---
+    
+    ## **🚗 ClicknDrive Features & How to Use Them**  
+    
+    ### **1️⃣ Browsing & Renting a Car**  
+    - Users can explore **available cars** using filters such as **type, price, location, and features**.  
+    - To rent a car:  
+      1. Click on a car listing to view **detailed specifications, images, and pricing**.  
+      2. Select **rental duration** and any **optional add-ons (e.g., insurance, extra driver)**.  
+      3. Confirm the rental and proceed with **secure payment options**.  
+      4. Track rental status in the **"My Rentals"** section.  
+    
+    **💡 Tip:** Ensure the car matches your **budget, needs, and trip duration** before booking!  
+    
+    ---
+    
+    ### **2️⃣ Listing Your Own Car for Rent**  
+    - Users can list their **personal or commercial vehicles** for rent by following these steps:  
+      1. Navigate to **"Add Car"** in your dashboard.  
+      2. Provide essential details:  
+         - **Car brand & model**  
+         - **Year, mileage, fuel type**  
+         - **Pricing per day/hour**  
+         - **Availability schedule**  
+         - **High-quality images**  
+      3. Click **Submit** to make the listing live.  
+    
+    **💡 Tip:** Well-maintained cars with **clear images and competitive pricing** attract more renters!  
+    
+    ---
+    
+    ### **3️⃣ Managing Rental Requests & Transactions**  
+    - View, accept, or decline rental requests in the **"Manage Requests"** section.  
+    - Track payments, earnings, and upcoming rentals in the **"Earnings Dashboard"**.  
+    - Update car availability or modify pricing as needed.  
+    
+    ---
+    
+    ### **4️⃣ Hiring a Driver for Your Rental**  
+    - If users require a driver, they can request one during car booking:  
+      - Choose **“Hire a Driver”** option.  
+      - Select from available **licensed professionals** based on ratings & reviews.  
+      - The driver’s details will be shared upon confirmation.  
+    
+    **💡 Tip:** Check driver credentials and reviews for a smooth experience!  
+    
+    ---
+    
+    ## **🔍 Frequently Asked Questions (FAQs)**  
+    
+    ### **🔹 What payment methods are supported?**  
+    - ClicknDrive accepts **credit/debit cards, PayPal, and digital wallets**.  
+    
+    ### **🔹 What happens if a rental car gets damaged?**  
+    - Rentals include **damage policies**. Review the **insurance coverage** before booking.  
+    
+    ### **🔹 Can I cancel a booking?**  
+    - Yes, but cancellation policies vary. Check the **cancellation terms** before booking.  
+    
+    ---
+    
+    ## **🤖 Advanced Capabilities of the Chatbot**  
+    - **Smart Recommendations**: Suggests cars based on user preferences.  
+    - **Instant Rental Status Updates**: Provides real-time tracking of rental requests.  
+    - **Multi-language Support** *(if applicable)*.  
+    - **24/7 Customer Assistance** for **rental issues, disputes, and guidance**.  
+    
+    Let me know how I can assist you today! 😊 🚘
+    
+    Available Filters:
+    1. Car Types: Sedan, SUV, Hatchback, Luxury
+    2. Car Brands: Toyota, Honda, Ford, BMW, Mercedes, Audi, Hyundai, Kia, Volkswagen, Nissan
+    3. Seating Capacity: 2, 4, 5, 6, 7, 8 people
+    4. Price Range: Min to Max in ₹ per hour
+    5. Fuel Types: Petrol, Diesel, Electric, Hybrid
+    6. Transmission: Manual, Automatic
+
+    When suggesting cars, respond with a JSON structure like this:
+    {
+      "filters": {
+        "carTypes": ["type1", "type2"],
+        "carBrands": ["brand1", "brand2"],
+        "seatingCapacities": [number],
+        "priceRange": { "min": number, "max": number },
+        "fuelTypes": ["type1", "type2"],
+        "transmission": ["type1", "type2"]
+      },
+      "explanation": "Brief explanation of why these filters were chosen"
+    }
+
+    Keep the regular conversation friendly but when user asks for car suggestions, provide the JSON response.`;
 
     try {
       // Check if API key is available

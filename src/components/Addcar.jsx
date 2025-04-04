@@ -202,19 +202,16 @@ const AddCar = ({ currentUser, userEmail }) => {
         <div className="form-grid">
           <div className="form-group">
             <label htmlFor="carBrand">Car Brand</label>
-            <select
+            <input
+              type="text"
               id="carBrand"
               name="carBrand"
               value={formData.carBrand}
               onChange={handleChange}
+              placeholder="Enter car brand (e.g., Toyota, Honda)"
               required
               disabled={loading}
-            >
-              <option value="">Select Brand</option>
-              {carBrands.map((brand) => (
-                <option key={brand} value={brand}>{brand}</option>
-              ))}
-            </select>
+            />
           </div>
 
           <div className="form-group">
