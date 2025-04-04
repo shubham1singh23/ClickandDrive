@@ -23,6 +23,10 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
   });
   const [bookingStatus, setBookingStatus] = useState(null);
   const [bookingError, setBookingError] = useState(null);
+  const [upiId, setUpiId] = useState('');
+  const [paymentStatus, setPaymentStatus] = useState(false);
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   // Filter states
   const [showFilters, setShowFilters] = useState(false);
@@ -327,17 +331,23 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         pickupAddress: selectedCar.address,
-        dropAddress: bookingData.dropAddress
+        dropAddress: bookingData.dropAddress,
+        upiId: upiId
       };
 
       // Push the booking request to Firebase
       const newRequestRef = push(rentRequestsRef);
       await set(newRequestRef, bookingRequest);
 
-      // Update UI state
-      setBookingStatus('accepted'); // Changed from 'pending' to 'accepted'
-      setShowBookingForm(false);
-      closeModal();
+      // Show payment success animation
+      setShowPaymentSuccess(true);
+      setTimeout(() => {
+        setShowPaymentSuccess(false);
+        setShowBookingForm(false);
+        closeModal();
+        // Reset UPI ID
+        setUpiId('');
+      }, 2000);
 
       // Show success message
       alert('Car booked successfully! You can view your booking in the Rent Requests section.');
@@ -417,6 +427,23 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
       return;
     }
     setShowBookingForm(true);
+  };
+
+  const handlePayment = () => {
+    if (!upiId) {
+      alert('Please enter UPI ID');
+      return;
+    }
+    setIsProcessingPayment(true);
+    // Simulate payment processing
+    setTimeout(() => {
+      setIsProcessingPayment(false);
+      setPaymentStatus(true);
+      setShowPaymentSuccess(true);
+      setTimeout(() => {
+        setShowPaymentSuccess(false);
+      }, 2000);
+    }, 1500);
   };
 
   if (loading) {
@@ -969,6 +996,38 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
                           </div>
                         </div>
 
+                        <div className="form-group">
+                          <label>UPI ID:</label>
+                          <input
+                            type="text"
+                            value={upiId}
+                            onChange={(e) => setUpiId(e.target.value)}
+                            placeholder="Enter your UPI ID"
+                            required
+                          />
+                          <button
+                            className="pay-button"
+                            onClick={handlePayment}
+                            disabled={isProcessingPayment || !upiId || paymentStatus}
+                          >
+                            {isProcessingPayment ? 'Processing...' : paymentStatus ? 'Paid' : 'Pay Now'}
+                          </button>
+                        </div>
+
+                        {isProcessingPayment && (
+                          <div className="payment-processing-animation">
+                            <div className="spinner"></div>
+                            <p>Processing Payment...</p>
+                          </div>
+                        )}
+
+                        {showPaymentSuccess && (
+                          <div className="payment-success-animation">
+                            <div className="checkmark">✓</div>
+                            <p>Payment Successful!</p>
+                          </div>
+                        )}
+
                         <div className="price-summary">
                           <div className="price-item">
                             <span>Price per Hour</span>
@@ -987,6 +1046,13 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
                           </div>
                         )}
 
+                        {showPaymentSuccess && (
+                          <div className="payment-success-animation">
+                            <div className="checkmark">✓</div>
+                            <p>Payment Successful!</p>
+                          </div>
+                        )}
+
                         <div className="booking-form-actions">
                           <button
                             type="button"
@@ -998,7 +1064,7 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
                           <button
                             type="submit"
                             className="book-now-button"
-                            disabled={!bookingData.bookingDate || !bookingData.pickupTime || bookingError}
+                            disabled={!bookingData.bookingDate || !bookingData.pickupTime || bookingError || !paymentStatus}
                           >
                             Confirm Booking
                           </button>

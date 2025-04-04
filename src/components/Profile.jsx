@@ -76,6 +76,12 @@ const Profile = ({ currentUser, userEmail }) => {
               totalPrice: parseFloat(booking.totalPrice) // Ensure totalPrice is a number
             }));
 
+          // Get recent deliveries
+          const recentDeliveries = allRequests
+            .filter(req => req.driverId === currentUser)
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 5);
+
           // Update state with verified numbers
           setUserStats(prev => ({
             ...prev,
@@ -83,6 +89,7 @@ const Profile = ({ currentUser, userEmail }) => {
             totalRentEarnings: parseFloat(rentEarnings.toFixed(2)),
             totalDeliveryEarnings: parseFloat(deliveryEarnings.toFixed(2)),
             recentBookings,
+            recentDeliveries
           }));
 
           // Log for debugging
