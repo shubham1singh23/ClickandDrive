@@ -11,6 +11,7 @@ const MyCar = ({ currentUser }) => {
   const [error, setError] = useState(null);
   const [editingCar, setEditingCar] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [processingAction, setProcessingAction] = useState(false);
 
   // Initialize Firebase Database
   const db = getDatabase(app);
@@ -20,77 +21,150 @@ const MyCar = ({ currentUser }) => {
     if (!currentUser) return;
 
     const carsRef = ref(db, `cars`);
-    const unsubscribe = onValue(carsRef, (snapshot) => {
-      try {
-        const data = snapshot.val();
-        if (data) {
-          // Filter cars for current user
-          const userCars = Object.entries(data)
-            .filter(([_, car]) => car.userId === currentUser)
-            .map(([id, car]) => ({
-              id,
-              ...car
-            }));
-          setCars(userCars);
-        } else {
-          setCars([]);
-        }
-        setLoading(false);
-      } catch (err) {
-        setError('Error fetching cars');
-        setLoading(false);
-      }
-    });
 
-    return () => unsubscribe();
+    try {
+      const unsubscribe = onValue(carsRef, (snapshot) => {
+        try {
+          const data = snapshot.val();
+          if (data) {
+            // Filter cars for current user
+            const userCars = Object.entries(data)
+              .filter(([_, car]) => car.userId === currentUser)
+              .map(([id, car]) => ({
+                id,
+                ...car
+              }));
+            setCars(userCars);
+          } else {
+            setCars([]);
+          }
+          setLoading(false);
+        } catch (err) {
+          console.error("Error processing car data:", err);
+          setError('Error fetching cars');
+          setLoading(false);
+        }
+      }, (error) => {
+        console.error("Database error:", error);
+        setError('Database connection error');
+        setLoading(false);
+      });
+
+      return () => {
+        // Ensure we properly detach the listener when component unmounts
+        try {
+          unsubscribe();
+        } catch (err) {
+          console.error("Error unsubscribing:", err);
+        }
+      };
+    } catch (err) {
+      console.error("Error setting up database listener:", err);
+      setError('Failed to connect to database');
+      setLoading(false);
+    }
   }, [currentUser, db]);
 
   // Delete car handler
   const handleDelete = useCallback(async (carId) => {
-    if (window.confirm('Are you sure you want to delete this car?')) {
-      try {
-        const carRef = ref(db, `cars/${carId}`);
-        await remove(carRef);
-      } catch (err) {
-        setError('Error deleting car');
-      }
+    if (!window.confirm('Are you sure you want to delete this car?')) {
+      return;
+    }
+
+    setProcessingAction(true);
+    try {
+      const carRef = ref(db, `cars/${carId}`);
+      await remove(carRef);
+      // Firebase listener will update the UI automatically
+    } catch (err) {
+      console.error("Delete error:", err);
+      setError('Error deleting car');
+    } finally {
+      setProcessingAction(false);
     }
   }, [db]);
+
+  // Clean object to ensure no undefined values
+  const cleanObjectForFirebase = (obj) => {
+    const cleanObj = {};
+    Object.keys(obj).forEach(key => {
+      // Skip functions and undefined values
+      if (typeof obj[key] !== 'function' && typeof obj[key] !== 'undefined') {
+        cleanObj[key] = obj[key] === null ? '' : obj[key];
+      }
+    });
+    return cleanObj;
+  };
 
   // Edit car handler
   const handleEdit = useCallback(async (carData) => {
+    setProcessingAction(true);
     try {
       const carRef = ref(db, `cars/${carData.id}`);
-      const updates = {
-        pricePerHour: carData.pricePerHour,
-        location: carData.location,
-        address: carData.address,
-        seatingCapacity: carData.seatingCapacity,
-        transmission: carData.transmission,
-        fuelType: carData.fuelType,
-        carType: carData.carType,
-        rentingEnabled: carData.rentingEnabled,
+
+      // Create updates object with default values to prevent undefined
+      const updates = cleanObjectForFirebase({
+        pricePerHour: carData.pricePerHour || 0,
+        location: carData.location || '',
+        address: carData.address || '',
+        seatingCapacity: carData.seatingCapacity || 4,
+        transmission: carData.transmission || 'Manual',
+        fuelType: carData.fuelType || 'Petrol',
+        carType: carData.carType || 'Sedan',
+        rentingEnabled: carData.rentingEnabled === undefined ? true : carData.rentingEnabled,
         updatedAt: new Date().toISOString()
-      };
+      });
+
+      console.log("Sending updates to Firebase:", updates);
+
+      // Wait for the update to complete
       await update(carRef, updates);
+
+      // Only after update is complete, update UI state
       setShowEditModal(false);
       setEditingCar(null);
     } catch (err) {
-      setError('Error updating car');
+      console.error("Update error:", err);
+      setError(`Error updating car: ${err.message}`);
+    } finally {
+      setProcessingAction(false);
     }
   }, [db]);
 
-  const toggleRenting = async (car, enabled) => {
+  const toggleRenting = useCallback(async (car, enabled) => {
+    setProcessingAction(true);
     try {
       const carRef = ref(db, `cars/${car.id}`);
-      await update(carRef, {
-        rentingEnabled: enabled,
+
+      // Use boolean value for rentingEnabled to avoid undefined
+      const updates = {
+        rentingEnabled: enabled === true, // Force boolean
         updatedAt: new Date().toISOString()
-      });
+      };
+
+      console.log("Toggling rental status:", updates);
+
+      // Wait for the update to complete
+      await update(carRef, updates);
+
+      // Firebase listener will update the UI automatically
     } catch (err) {
-      setError('Error updating car status');
+      console.error("Toggle error:", err);
+      setError(`Error updating car status: ${err.message}`);
+    } finally {
+      setProcessingAction(false);
     }
-  };
+  }, [db]);
+
+  // Clear error message after 5 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   // Memoized car cards
   const carCards = useMemo(() => {
@@ -105,7 +179,7 @@ const MyCar = ({ currentUser }) => {
         whileHover={{ scale: 1.02 }}
       >
         <div className="car-image">
-          <img src={car.imageUrls[0]} alt={`${car.carBrand} ${car.carModel}`} />
+          <img src={car.imageUrls?.[0] || '/default-car.jpg'} alt={`${car.carBrand} ${car.carModel}`} />
         </div>
         <div className="car-details">
           <h3>{car.carBrand} {car.carModel}</h3>
@@ -121,8 +195,9 @@ const MyCar = ({ currentUser }) => {
             <label className="switch">
               <input
                 type="checkbox"
-                checked={car.rentingEnabled !== false}
+                checked={car.rentingEnabled !== false} // Ensure boolean
                 onChange={(e) => toggleRenting(car, e.target.checked)}
+                disabled={processingAction}
               />
               <span className="slider round"></span>
             </label>
@@ -133,22 +208,30 @@ const MyCar = ({ currentUser }) => {
           <button
             className="edit-btn"
             onClick={() => {
-              setEditingCar(car);
+              // Create a clean copy of the car data
+              const cleanCar = { ...car };
+              // Set defaults for any undefined fields
+              if (cleanCar.rentingEnabled === undefined) {
+                cleanCar.rentingEnabled = true;
+              }
+              setEditingCar(cleanCar);
               setShowEditModal(true);
             }}
+            disabled={processingAction}
           >
             <FaEdit /> Edit
           </button>
           <button
             className="delete-btn"
             onClick={() => handleDelete(car.id)}
+            disabled={processingAction}
           >
             <FaTrash /> Delete
           </button>
         </div>
       </motion.div>
     ));
-  }, [cars, handleDelete]);
+  }, [cars, handleDelete, toggleRenting, processingAction]);
 
   if (loading) {
     return (
@@ -159,13 +242,30 @@ const MyCar = ({ currentUser }) => {
     );
   }
 
-  if (error) {
-    return <div className="error-message">{error}</div>;
-  }
-
   return (
     <div className="mycar-container">
       <h1>My Cars</h1>
+
+      {/* Error message display */}
+      {error && (
+        <motion.div
+          className="error-message"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+        >
+          {error}
+        </motion.div>
+      )}
+
+      {/* Processing indicator */}
+      {processingAction && (
+        <div className="processing-indicator">
+          <FaSpinner className="spinner" />
+          <span>Processing...</span>
+        </div>
+      )}
+
       {cars.length === 0 ? (
         <div className="no-cars">
           <FaCar className="no-cars-icon" />
@@ -202,12 +302,13 @@ const MyCar = ({ currentUser }) => {
                 <div className="form-group">
                   <label>Car Type</label>
                   <select
-                    value={editingCar.carType}
+                    value={editingCar.carType || 'Sedan'}
                     onChange={(e) => setEditingCar({
                       ...editingCar,
                       carType: e.target.value
                     })}
                     required
+                    disabled={processingAction}
                   >
                     <option value="Sedan">Sedan</option>
                     <option value="SUV">SUV</option>
@@ -219,12 +320,13 @@ const MyCar = ({ currentUser }) => {
                 <div className="form-group">
                   <label>Transmission</label>
                   <select
-                    value={editingCar.transmission}
+                    value={editingCar.transmission || 'Manual'}
                     onChange={(e) => setEditingCar({
                       ...editingCar,
                       transmission: e.target.value
                     })}
                     required
+                    disabled={processingAction}
                   >
                     <option value="Manual">Manual</option>
                     <option value="Automatic">Automatic</option>
@@ -234,12 +336,13 @@ const MyCar = ({ currentUser }) => {
                 <div className="form-group">
                   <label>Fuel Type</label>
                   <select
-                    value={editingCar.fuelType}
+                    value={editingCar.fuelType || 'Petrol'}
                     onChange={(e) => setEditingCar({
                       ...editingCar,
                       fuelType: e.target.value
                     })}
                     required
+                    disabled={processingAction}
                   >
                     <option value="Petrol">Petrol</option>
                     <option value="Diesel">Diesel</option>
@@ -251,12 +354,13 @@ const MyCar = ({ currentUser }) => {
                 <div className="form-group">
                   <label>Seating Capacity</label>
                   <select
-                    value={editingCar.seatingCapacity}
+                    value={editingCar.seatingCapacity || '5'}
                     onChange={(e) => setEditingCar({
                       ...editingCar,
                       seatingCapacity: e.target.value
                     })}
                     required
+                    disabled={processingAction}
                   >
                     {[2, 4, 5, 6, 7, 8].map(num => (
                       <option key={num} value={num}>{num}</option>
@@ -268,13 +372,14 @@ const MyCar = ({ currentUser }) => {
                   <label>Price per Hour (₹)</label>
                   <input
                     type="number"
-                    value={editingCar.pricePerHour}
+                    value={editingCar.pricePerHour || '0'}
                     onChange={(e) => setEditingCar({
                       ...editingCar,
                       pricePerHour: e.target.value
                     })}
                     min="0"
                     required
+                    disabled={processingAction}
                   />
                 </div>
 
@@ -282,26 +387,43 @@ const MyCar = ({ currentUser }) => {
                   <label>Location</label>
                   <input
                     type="text"
-                    value={editingCar.location}
+                    value={editingCar.location || ''}
                     onChange={(e) => setEditingCar({
                       ...editingCar,
                       location: e.target.value
                     })}
                     required
+                    disabled={processingAction}
                   />
                 </div>
 
                 <div className="form-group">
                   <label>Complete Address</label>
                   <textarea
-                    value={editingCar.address}
+                    value={editingCar.address || ''}
                     onChange={(e) => setEditingCar({
                       ...editingCar,
                       address: e.target.value
                     })}
                     required
                     rows="3"
+                    disabled={processingAction}
                   />
+                </div>
+
+                <div className="form-group">
+                  <label className="checkbox-container">
+                    <input
+                      type="checkbox"
+                      checked={editingCar.rentingEnabled !== false}
+                      onChange={(e) => setEditingCar({
+                        ...editingCar,
+                        rentingEnabled: e.target.checked
+                      })}
+                      disabled={processingAction}
+                    />
+                    <span>Available for Rent</span>
+                  </label>
                 </div>
 
                 <div className="form-actions">
@@ -312,11 +434,22 @@ const MyCar = ({ currentUser }) => {
                       setShowEditModal(false);
                       setEditingCar(null);
                     }}
+                    disabled={processingAction}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="save-btn">
-                    Save Changes
+                  <button
+                    type="submit"
+                    className="save-btn"
+                    disabled={processingAction}
+                  >
+                    {processingAction ? (
+                      <>
+                        <FaSpinner className="spinner" /> Saving...
+                      </>
+                    ) : (
+                      'Save Changes'
+                    )}
                   </button>
                 </div>
               </form>

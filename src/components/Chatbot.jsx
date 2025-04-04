@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './ChatBot.css';
+import { useNavigate } from 'react-router-dom'; // Import for navigation
 
 // Configuration options
 const CONFIG = {
@@ -33,6 +34,7 @@ const parseMarkdown = (text) => {
 };
 
 const ChatBot = ({ userEmail, onFilterUpdate }) => {
+  const navigate = useNavigate(); // Initialize the navigate function
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     { id: 1, text: "Hi there! I'm your car rental assistant. How can I help you today?", sender: "bot" }
@@ -98,6 +100,9 @@ const ChatBot = ({ userEmail, onFilterUpdate }) => {
             onFilterUpdate(filterData.filters);
             // Close the chat window after applying filters
             setIsOpen(false);
+
+            // Navigate to home page
+            navigate('/');
           }
 
           // Add explanation to chat
@@ -185,9 +190,9 @@ const ChatBot = ({ userEmail, onFilterUpdate }) => {
     
     ### **4️⃣ Hiring a Driver for Your Rental**  
     - If users require a driver, they can request one during car booking:  
-      - Choose **“Hire a Driver”** option.  
+      - Choose **"Hire a Driver"** option.  
       - Select from available **licensed professionals** based on ratings & reviews.  
-      - The driver’s details will be shared upon confirmation.  
+      - The driver's details will be shared upon confirmation.  
     
     **💡 Tip:** Check driver credentials and reviews for a smooth experience!  
     
@@ -222,6 +227,10 @@ const ChatBot = ({ userEmail, onFilterUpdate }) => {
     4. Price Range: Min to Max in ₹ per hour
     5. Fuel Types: Petrol, Diesel, Electric, Hybrid
     6. Transmission: Manual, Automatic
+
+        IMPORTANT: When suggesting cars, ONLY include filters that the user specifically asked for. DO NOT include any filter categories that weren't explicitly mentioned by the user. For example, if the user only asks for a Toyota, only include the carBrands filter with "Toyota", and DO NOT include any other filters.
+        Important :If the user asks for cars for specific conditions like  offroading , racing , family trip,fuel efficient, long drives etc. then suggest the car types and brands accordingly.
+    If the user asks for a car for a specific number of people, include the seating capacity filter with the required number and seats more than required can also be displayed. For example, if the user asks for a car for 5 people, include the seating capacity filter with 5.
 
     When suggesting cars, respond with a JSON structure like this:
     {
