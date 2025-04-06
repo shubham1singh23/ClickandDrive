@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import './ChatBot.css';
+import './Chatbot.css';
 import { useNavigate } from 'react-router-dom'; // Import for navigation
 
 // Configuration options
