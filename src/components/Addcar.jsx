@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './AddCar.css';
+import './Addcar.css';
 import { Camera } from 'lucide-react';
 import { ref, push, set } from 'firebase/database'
 import { getDatabase } from 'firebase/database';
