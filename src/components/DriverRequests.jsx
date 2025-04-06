@@ -37,36 +37,34 @@ const DriverRequests = ({ currentUser, userEmail }) => {
       const database = getDatabase(app);
       const requestsRef = ref(database, 'rentRequests');
 
-      onValue(requestsRef, (snapshot) => {
+      onValue(requestsRef, async (snapshot) => {
         const data = snapshot.val();
-        console.log('Raw data from Firebase:', data); // Debug log
-
         if (data) {
           const requestsArray = Object.entries(data).map(([id, details]) => {
-            // Generate random phone numbers for each request
             const ownerPhone = generatePhoneNumber();
             const renterPhone = generatePhoneNumber();
-
-            // Calculate driver arrival time
             const driverArrivalTime = calculateDriverArrivalTime(details.pickupTime);
+
+            // Calculate driver earnings (10% of totalPrice)
+            let driverEarnings = 0;
+            if (details.totalPrice) {
+              const price = parseFloat(details.totalPrice);
+              driverEarnings = !isNaN(price) ? price * 0.1 : 0;
+              console.log('Total Price:', price, 'Driver Earnings:', driverEarnings);
+            }
 
             return {
               id,
               ...details,
               ownerPhone,
               renterPhone,
-              driverArrivalTime
+              driverArrivalTime,
+              driverEarnings
             };
           });
 
-          console.log('All requests:', requestsArray); // Debug log
-
           // Filter requests to show only accepted requests
-          const acceptedRequests = requestsArray.filter(request => {
-            return request.status === 'accepted';
-          });
-
-          console.log('Filtered accepted requests:', acceptedRequests); // Debug log
+          const acceptedRequests = requestsArray.filter(request => request.status === 'accepted');
 
           // Extract unique cities
           const uniqueCities = [...new Set(acceptedRequests.map(request => request.location))];
@@ -79,7 +77,6 @@ const DriverRequests = ({ currentUser, userEmail }) => {
 
           setRequests(filteredRequests);
         } else {
-          console.log('No data found in Firebase'); // Debug log
           setRequests([]);
           setCities([]);
         }
@@ -226,6 +223,14 @@ const DriverRequests = ({ currentUser, userEmail }) => {
                   <div>
                     <h3>Rental Duration</h3>
                     <p>{request.duration} hours</p>
+                  </div>
+                </div>
+
+                <div className="earnings-info">
+                  <FaClock className="icon" />
+                  <div>
+                    <h3>Driver Earnings</h3>
+                    <p>₹{request.driverEarnings.toFixed(2)} (10% of rent)</p>
                   </div>
                 </div>
 

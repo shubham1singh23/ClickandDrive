@@ -103,6 +103,17 @@ const ChatBot = ({ userEmail, onFilterUpdate }) => {
 
             // Navigate to home page
             navigate('/');
+
+            // Add smooth scroll to car listings
+            setTimeout(() => {
+              const carListingsElement = document.querySelector('.cars-grid');
+              if (carListingsElement) {
+                carListingsElement.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'start'
+                });
+              }
+            }, 500); // Wait for navigation to complete
           }
 
           // Add explanation to chat
