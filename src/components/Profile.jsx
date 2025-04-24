@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getDatabase, ref, onValue } from 'firebase/database';
 import app from './Firebase';
 import './Profile.css';
-import { FaCar, FaMoneyBillWave, FaTruck, FaWallet } from 'react-icons/fa';
+import { FaCar, FaMoneyBillWave, FaTruck, FaWallet, FaUser, FaCalendar, FaClock, FaMapMarkerAlt } from 'react-icons/fa';
 
 const Profile = ({ currentUser, userEmail }) => {
   const [userStats, setUserStats] = useState({
@@ -14,6 +14,9 @@ const Profile = ({ currentUser, userEmail }) => {
     recentBookings: [],
     recentDeliveries: []
   });
+  const [profileData, setProfileData] = useState(null);
+  const [bookedCars, setBookedCars] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchUserStats = () => {
@@ -99,16 +102,54 @@ const Profile = ({ currentUser, userEmail }) => {
       });
     };
 
+    const fetchProfileAndBookings = async () => {
+      const database = getDatabase(app);
+
+      // Fetch profile data
+      const userRef = ref(database, `users/${currentUser}`);
+      onValue(userRef, (snapshot) => {
+        const data = snapshot.val();
+        setProfileData(data);
+      });
+
+      // Fetch booked cars
+      const rentRequestsRef = ref(database, 'rentRequests');
+      onValue(rentRequestsRef, (snapshot) => {
+        const requests = snapshot.val();
+        if (requests) {
+          const userBookings = Object.entries(requests)
+            .map(([id, booking]) => ({ id, ...booking }))
+            .filter(booking => booking.renterId === currentUser)
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          setBookedCars(userBookings);
+        }
+        setLoading(false);
+      });
+    };
+
     if (currentUser) {
       fetchUserStats();
+      fetchProfileAndBookings();
     }
   }, [currentUser]);
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loader"></div>
+        <p>Loading profile...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="profile-container">
       <div className="profile-header">
-        <div className="user-info">
-          <h1>Profile Dashboard</h1>
+        <div className="profile-avatar">
+          <FaUser className="avatar-icon" />
+        </div>
+        <div className="profile-info">
+          <h1>{profileData?.name || 'User'}</h1>
           <p>{userEmail}</p>
         </div>
       </div>
@@ -156,7 +197,7 @@ const Profile = ({ currentUser, userEmail }) => {
       </div>
 
       <div className="recent-activities">
-        <div className="recent-bookings">
+        <div className="recent-bookings scrollable-section">
           <h2>Recent Bookings</h2>
           {userStats.recentBookings.length > 0 ? (
             <div className="activity-list">
@@ -167,6 +208,7 @@ const Profile = ({ currentUser, userEmail }) => {
                     <h3>{booking.carBrand} {booking.carModel}</h3>
                     <p>Booked by: {booking.renterEmail}</p>
                     <p>Amount: ₹{booking.totalPrice}</p>
+                    <p>Status: {booking.status}</p>
                     <small>{new Date(booking.createdAt).toLocaleDateString()}</small>
                   </div>
                 </div>
@@ -177,7 +219,7 @@ const Profile = ({ currentUser, userEmail }) => {
           )}
         </div>
 
-        <div className="recent-deliveries">
+        <div className="recent-deliveries scrollable-section">
           <h2>Recent Deliveries</h2>
           {userStats.recentDeliveries.length > 0 ? (
             <div className="activity-list">
@@ -189,6 +231,7 @@ const Profile = ({ currentUser, userEmail }) => {
                     <p>From: {delivery.pickupAddress}</p>
                     <p>To: {delivery.dropAddress}</p>
                     <p>Earnings: ₹{(delivery.totalPrice * 0.1).toFixed(2)}</p>
+                    <p>Status: {delivery.status}</p>
                     <small>{new Date(delivery.createdAt).toLocaleDateString()}</small>
                   </div>
                 </div>
@@ -198,6 +241,69 @@ const Profile = ({ currentUser, userEmail }) => {
             <p className="no-data">No recent deliveries</p>
           )}
         </div>
+      </div>
+
+      <div className="profile-content">
+        <section className="booked-cars-section">
+          <h2>My Booked Cars</h2>
+          {bookedCars.length === 0 ? (
+            <div className="no-bookings">
+              <FaCar className="no-bookings-icon" />
+              <p>You haven't booked any cars yet</p>
+            </div>
+          ) : (
+            <div className="cars-list">
+              {bookedCars.map(booking => (
+                <div key={booking.id} className="car-item">
+                  <div className="car-title">
+                    <h3>{booking.carBrand} {booking.carModel}</h3>
+                    <div className="booking-status-badge" data-status={booking.status}>
+                      {booking.status}
+                    </div>
+                  </div>
+
+                  <div className="detail-group">
+                    <div className="detail-item">
+                      <FaCalendar />
+                      <div className="detail-text">
+                        <span className="detail-label">Booking Date</span>
+                        <span className="detail-value">{booking.bookingDate}</span>
+                      </div>
+                    </div>
+
+                    <div className="detail-item">
+                      <FaClock />
+                      <div className="detail-text">
+                        <span className="detail-label">Pickup Time</span>
+                        <span className="detail-value">{booking.pickupTime} ({booking.duration}h)</span>
+                      </div>
+                    </div>
+
+                    <div className="detail-item">
+                      <FaMapMarkerAlt />
+                      <div className="detail-text">
+                        <span className="detail-label">Pickup Location</span>
+                        <span className="detail-value">{booking.pickupAddress}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="car-type">
+                    <span className="detail-label">Car Type</span>
+                    <span className="detail-value">{booking.carType}</span>
+                  </div>
+
+                  <div className="car-pricing">
+                    <div className="price">
+                      <span className="amount">₹{booking.totalPrice}</span>
+                      <span className="period">total</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );

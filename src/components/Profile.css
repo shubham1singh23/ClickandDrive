@@ -4,6 +4,22 @@
   margin: 0 auto;
   color: white;
   margin-top: 92px;
+  height: calc(100vh - 92px);
+  overflow-y: auto;
+}
+
+.profile-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.profile-container::-webkit-scrollbar-track {
+  background: #1a1a1a;
+  border-radius: 10px;
+}
+
+.profile-container::-webkit-scrollbar-thumb {
+  background: #4a6cf7;
+  border-radius: 10px;
 }
 
 .profile-header {
@@ -86,6 +102,8 @@
   background: #1a1a1a;
   padding: 1.5rem;
   border-radius: 10px;
+  height: auto;
+  overflow: visible;
 }
 
 .recent-bookings h2,
@@ -143,6 +161,219 @@
   padding: 2rem;
 }
 
+.booked-cars-section {
+  background: #1a1a1a;
+  padding: 1.5rem;
+  border-radius: 10px;
+  height: auto;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.booked-cars-section h2 {
+  color: #ffffff;
+  margin-bottom: 2rem;
+  font-size: 1.5rem;
+}
+
+.no-bookings {
+  text-align: center;
+  padding: 3rem;
+  background: #242424;
+  border-radius: 10px;
+  color: #999;
+}
+
+.no-bookings-icon {
+  font-size: 3rem;
+  color: #ccc;
+  margin-bottom: 1rem;
+}
+
+.booking-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: #e0e0e0;
+  font-size: 1rem;
+}
+
+.detail-item svg {
+  color: #4a6cf7;
+  font-size: 1.2rem;
+}
+
+.booking-status-badge {
+  position: static;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.booking-status-badge[data-status="accepted"] {
+  background: rgba(40, 167, 69, 0.8);
+  color: white;
+}
+
+.booking-status-badge[data-status="pending"] {
+  background: rgba(255, 193, 7, 0.8);
+  color: black;
+}
+
+.booking-status-badge[data-status="rejected"] {
+  background: rgba(220, 53, 69, 0.8);
+  color: white;
+}
+
+.booking-status-badge[data-status="completed"] {
+  background: rgba(23, 162, 184, 0.8);
+  color: white;
+}
+
+.scrollable-section {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.scrollable-section::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollable-section::-webkit-scrollbar-track {
+  background: #1a1a1a;
+  border-radius: 10px;
+}
+
+.scrollable-section::-webkit-scrollbar-thumb {
+  background: #4a6cf7;
+  border-radius: 10px;
+}
+
+.cars-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  flex: 1;
+  overflow: visible;
+  padding-right: 10px;
+}
+
+.cars-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.cars-list::-webkit-scrollbar-track {
+  background: #242424;
+  border-radius: 10px;
+}
+
+.cars-list::-webkit-scrollbar-thumb {
+  background: #4a6cf7;
+  border-radius: 10px;
+}
+
+.car-item {
+  background: #242424;
+  border-radius: 10px;
+  padding: 1.2rem;
+  margin-bottom: 1rem;
+  border: 1px solid #333;
+}
+
+.car-item:last-child {
+  margin-bottom: 0;
+}
+
+.car-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #333;
+  
+}
+
+.car-title h3 {
+  font-size: 1.2rem;
+  color: #4b4b4b !important;
+
+  margin: 0;
+}
+
+
+.car-type {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  background: #333;
+  padding: 0.8rem;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.car-pricing {
+  margin-top: 1rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid #333;
+}
+
+.price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.price .amount {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #4a6cf7;
+}
+
+.price .period {
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.detail-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  background: #1a1a1a;
+  padding: 0.8rem;
+  border-radius: 8px;
+  margin: 0.8rem 0;
+}
+
+.detail-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+}
+
+.detail-label {
+  font-size: 0.85rem;
+  color: #999;
+  font-weight: 500;
+}
+
+.detail-value {
+  color: #ffffff;
+  font-size: 1rem;
+}
+
 @media (max-width: 768px) {
   .profile-container {
     padding: 1rem;
@@ -155,4 +386,16 @@
   .recent-activities {
     grid-template-columns: 1fr;
   }
+
+  .cars-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .booking-details {
+    gap: 0.5rem;
+  }
+}
+
+.profile-content {
+  margin-top: 1rem;
 }

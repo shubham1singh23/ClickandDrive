@@ -50,7 +50,6 @@ const DriverRequests = ({ currentUser, userEmail }) => {
             if (details.totalPrice) {
               const price = parseFloat(details.totalPrice);
               driverEarnings = !isNaN(price) ? price * 0.1 : 0;
-              console.log('Total Price:', price, 'Driver Earnings:', driverEarnings);
             }
 
             return {
@@ -63,18 +62,24 @@ const DriverRequests = ({ currentUser, userEmail }) => {
             };
           });
 
-          // Filter requests to show only accepted requests
-          const acceptedRequests = requestsArray.filter(request => request.status === 'accepted');
+          // Show requests that need a driver (either new or accepted)
+          const availableRequests = requestsArray.filter(request =>
+            (!request.driverId || request.driverId === '') &&
+            (!request.status || request.status === 'pending')
+          );
+
+          console.log('Filtered requests:', availableRequests); // Debug log
 
           // Extract unique cities
-          const uniqueCities = [...new Set(acceptedRequests.map(request => request.location))];
+          const uniqueCities = [...new Set(availableRequests.map(request => request.location))];
           setCities(uniqueCities);
 
           // Filter by selected city if any
           const filteredRequests = selectedCity
-            ? acceptedRequests.filter(request => request.location === selectedCity)
-            : acceptedRequests;
+            ? availableRequests.filter(request => request.location === selectedCity)
+            : availableRequests;
 
+          console.log('Available requests:', filteredRequests); // Debug log
           setRequests(filteredRequests);
         } else {
           setRequests([]);
