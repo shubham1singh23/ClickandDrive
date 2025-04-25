@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { FaCar, FaUser, FaSignOutAlt, FaListAlt, FaTruck, FaRobot } from 'react-icons/fa';
+import { FaCar, FaUser, FaSignOutAlt, FaListAlt, FaTruck, FaRobot, FaBars, FaTimes } from 'react-icons/fa';
 import { getAuth, signOut } from 'firebase/auth';
 import app from './Firebase';
 import './Navbar.css';
@@ -9,6 +9,7 @@ const auth = getAuth(app);
 
 const Navbar = ({ currentUser, userEmail, setCurrentUser, setUserEmail }) => {
   const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -26,40 +27,50 @@ const Navbar = ({ currentUser, userEmail, setCurrentUser, setUserEmail }) => {
     window.dispatchEvent(new CustomEvent('toggleChatbot'));
   };
 
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        <Link to="/" className="navbar-logo">
+        <Link to="/" className="navbar-logo" onClick={closeMenu}>
           <FaCar className="logo-icon" />
           <span>ClickNDrive</span>
         </Link>
 
-        <div className="navbar-links">
-          {currentUser && (
-            <NavLink to="/profile" className="nav-link">
-              <FaUser />
-              <span>Profile</span>
-            </NavLink>
-          )}
-          <Link to="/" className="nav-link">
+        <button className="mobile-menu-button" onClick={toggleMenu}>
+          {isMenuOpen ? <FaTimes /> : <FaBars />}
+        </button>
+
+        <div className={`navbar-links ${isMenuOpen ? 'show' : ''}`}>
+          <Link to="/" className="nav-link" onClick={closeMenu}>
             <FaCar className="nav-icon" />
             <span>Browse Cars</span>
           </Link>
           {currentUser && (
             <>
-              <Link to="/add-car" className="nav-link">
+              <NavLink to="/profile" className="nav-link" onClick={closeMenu}>
+                <FaUser />
+                <span>Profile</span>
+              </NavLink>
+              <Link to="/add-car" className="nav-link" onClick={closeMenu}>
                 <FaCar className="nav-icon" />
                 <span>Add Car</span>
               </Link>
-              <NavLink to="/my-cars" className="nav-link">
+              <NavLink to="/my-cars" className="nav-link" onClick={closeMenu}>
                 <FaCar />
                 <span>My Cars</span>
               </NavLink>
-              <NavLink to="/delivery-partner" className="nav-link">
+              <NavLink to="/delivery-partner" className="nav-link" onClick={closeMenu}>
                 <FaTruck />
                 <span>Be Partner</span>
               </NavLink>
-              <button className="nav-link help-button" onClick={handleHelpClick}>
+              <button className="nav-link help-button" onClick={() => { handleHelpClick(); closeMenu(); }}>
                 <FaRobot />
                 <span>Get Help</span>
               </button>
@@ -69,12 +80,12 @@ const Navbar = ({ currentUser, userEmail, setCurrentUser, setUserEmail }) => {
 
         <div className="navbar-user">
           {currentUser ? (
-            <button onClick={handleSignOut} className="sign-out-btn">
+            <button onClick={() => { handleSignOut(); closeMenu(); }} className="sign-out-btn">
               <FaSignOutAlt className="sign-out-icon" />
               <span>Sign Out</span>
             </button>
           ) : (
-            <Link to="/login" className="login-btn">
+            <Link to="/login" className="login-btn" onClick={closeMenu}>
               <FaUser className="login-icon" />
               <span>Login</span>
             </Link>

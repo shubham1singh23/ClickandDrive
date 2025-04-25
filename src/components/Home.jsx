@@ -294,6 +294,19 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
       return;
     }
 
+    // Check for booking conflicts
+    const hasConflicts = await checkBookingConflicts(
+      selectedCar.id,
+      bookingData.bookingDate,
+      bookingData.pickupTime,
+      bookingData.duration
+    );
+
+    if (hasConflicts) {
+      setBookingError('This time slot is already booked. Please select a different time.');
+      return;
+    }
+
     try {
       const database = getDatabase(app);
       const rentRequestsRef = ref(database, 'rentRequests');
@@ -307,7 +320,6 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
         carBrand: selectedCar.carBrand,
         carModel: selectedCar.carModel,
         carType: selectedCar.carType,
-        location: selectedCar.location || 'Mumbai', // Ensure location is set
         ownerId: selectedCar.userId,
         ownerEmail: selectedCar.userEmail,
         renterId: currentUser,
@@ -315,27 +327,30 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
         bookingDate: bookingData.bookingDate,
         pickupTime: bookingData.pickupTime,
         duration: parseInt(bookingData.duration),
-        totalPrice: totalPrice,
-        status: 'pending',
-        driverId: null,
+        totalPrice: totalPrice, // Make sure totalPrice is a number
+        status: 'accepted',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        pickupAddress: selectedCar.location || bookingData.pickupAddress,
-        dropAddress: bookingData.dropAddress
+        pickupAddress: selectedCar.address,
+        dropAddress: bookingData.dropAddress,
+        upiId: upiId
       };
 
       // Push the booking request to Firebase
       const newRequestRef = push(rentRequestsRef);
       await set(newRequestRef, bookingRequest);
 
+      // Show payment success animation
       setShowPaymentSuccess(true);
       setTimeout(() => {
         setShowPaymentSuccess(false);
         setShowBookingForm(false);
         closeModal();
+        // Reset UPI ID
         setUpiId('');
       }, 2000);
 
+      // Show success message
       alert('Car booked successfully! You can view your booking in the Rent Requests section.');
 
     } catch (error) {
@@ -417,7 +432,7 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (selectedCar && bookingData.bookingDate && bookingData.pickupTime && bookingData.dropAddress) {
+    if (selectedCar) {
       try {
         const database = getDatabase(app);
         const requestData = {
@@ -425,16 +440,15 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
           carBrand: selectedCar.carBrand,
           carModel: selectedCar.carModel,
           carType: selectedCar.carType,
-          carImage: selectedCar.imageUrls ? selectedCar.imageUrls[0] : null,
+          imageUrls: selectedCar.imageUrls,
           renterId: currentUser,
           renterEmail: userEmail,
-          ownerId: selectedCar.userId,
+          carOwnerId: selectedCar.userId,
           ownerEmail: selectedCar.userEmail,
           bookingDate: bookingData.bookingDate,
           pickupTime: bookingData.pickupTime,
           duration: bookingData.duration,
-          location: selectedCar.location || 'Mumbai',
-          pickupAddress: selectedCar.location || 'Mumbai',
+          pickupAddress: selectedCar.address,
           dropAddress: bookingData.dropAddress,
           status: 'pending',
           totalPrice: selectedCar.pricePerHour * bookingData.duration,
@@ -445,222 +459,13 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
         await set(newRequestRef, requestData);
 
         setShowBookingForm(false);
-        setBookingStatus('success');
+        setSelectedCar(null);
         alert('Booking request sent successfully!');
-        closeModal();
       } catch (error) {
         console.error('Error submitting booking:', error);
         alert('Failed to submit booking. Please try again.');
       }
-    } else {
-      alert('Please fill in all required booking details');
     }
-  };
-
-  const renderCarDetails = () => {
-    if (!selectedCar) return null;
-
-    return (
-      <div className="modal-overlay" onClick={closeModal}>
-        <div className="car-detail-modal" onClick={(e) => e.stopPropagation()}>
-          <button className="close-button" onClick={closeModal}>×</button>
-          <div className="modal-content">
-            <div className="modal-gallery">
-              <div className="main-image-container">
-                <img src={selectedCar.imageUrls && selectedCar.imageUrls[0] ? selectedCar.imageUrls[0] : 'https://via.placeholder.com/600x400?text=No+Image'} alt={`${selectedCar.carBrand} ${selectedCar.carModel}`} className="main-image" />
-              </div>
-            </div>
-            <div className="modal-details">
-              <div className="car-header">
-                <div className="car-title-section">
-                  <h2>{selectedCar.carBrand} {selectedCar.carModel}</h2>
-                  <div className="car-subtitle">
-                    <span>{selectedCar.manufacturingYear}</span>
-                    <span>{selectedCar.carType}</span>
-                  </div>
-                </div>
-                <div className="price-badge">
-                  <span className="price-amount">₹{selectedCar.pricePerHour}</span>
-                  <span className="price-period">/hour</span>
-                </div>
-              </div>
-
-              <div className="car-highlights">
-                <div className="highlight">
-                  <div className="highlight-icon">
-                    <FaCar />
-                  </div>
-                  <div className="highlight-content">
-                    <span className="highlight-label">Type</span>
-                    <span className="highlight-value">{selectedCar.carType}</span>
-                  </div>
-                </div>
-                <div className="highlight">
-                  <div className="highlight-icon">
-                    <FaCog />
-                  </div>
-                  <div className="highlight-content">
-                    <span className="highlight-label">Transmission</span>
-                    <span className="highlight-value">{selectedCar.transmission}</span>
-                  </div>
-                </div>
-                <div className="highlight">
-                  <div className="highlight-icon">
-                    <FaGasPump />
-                  </div>
-                  <div className="highlight-content">
-                    <span className="highlight-label">Fuel Type</span>
-                    <span className="highlight-value">{selectedCar.fuelType}</span>
-                  </div>
-                </div>
-                <div className="highlight">
-                  <div className="highlight-icon">
-                    <FaUsers />
-                  </div>
-                  <div className="highlight-content">
-                    <span className="highlight-label">Seating</span>
-                    <span className="highlight-value">{selectedCar.seatingCapacity} Persons</span>
-                  </div>
-                </div>
-              </div>
-
-              {showBookingForm ? (
-                <form onSubmit={handleSubmit} className="booking-form">
-                  <div className="form-group">
-                    <label htmlFor="bookingDate">Select Date</label>
-                    <div className="calendar-input-container">
-                      <input
-                        type="date"
-                        id="bookingDate"
-                        value={bookingData.bookingDate}
-                        onChange={(e) => {
-                          setBookingData({ ...bookingData, bookingDate: e.target.value });
-                          checkAvailability(e.target.value, bookingData.pickupTime, bookingData.duration);
-                        }}
-                        min={new Date().toISOString().split('T')[0]}
-                        required
-                        className="calendar-input"
-                      />
-                    </div>
-                    <div className="calendar-hint">Select a date for your booking</div>
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="pickupTime">Select Pickup Time</label>
-                    <input
-                      type="time"
-                      id="pickupTime"
-                      value={bookingData.pickupTime}
-                      onChange={(e) => {
-                        setBookingData({ ...bookingData, pickupTime: e.target.value });
-                        checkAvailability(bookingData.bookingDate, e.target.value, bookingData.duration);
-                      }}
-                      required
-                      className="time-input"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="dropAddress">Drop-off Address</label>
-                    <textarea
-                      id="dropAddress"
-                      value={bookingData.dropAddress}
-                      onChange={(e) => setBookingData({ ...bookingData, dropAddress: e.target.value })}
-                      placeholder="Enter your drop-off address"
-                      required
-                      className="address-input"
-                      rows="3"
-                    />
-                    <div className="address-hint">Please provide the complete address where you'll drop off the car</div>
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="duration">Duration (hours)</label>
-                    <div className="duration-selector">
-                      <button
-                        type="button"
-                        className="duration-btn"
-                        onClick={() => {
-                          const newDuration = Math.max(1, bookingData.duration - 1);
-                          setBookingData({ ...bookingData, duration: newDuration });
-                          checkAvailability(bookingData.bookingDate, bookingData.pickupTime, newDuration);
-                        }}
-                        disabled={bookingData.duration <= 1}
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        id="duration"
-                        value={bookingData.duration}
-                        onChange={(e) => {
-                          const newDuration = Math.max(1, parseInt(e.target.value) || 1);
-                          setBookingData({ ...bookingData, duration: newDuration });
-                          checkAvailability(bookingData.bookingDate, bookingData.pickupTime, newDuration);
-                        }}
-                        min="1"
-                        required
-                        className="duration-input"
-                      />
-                      <button
-                        type="button"
-                        className="duration-btn"
-                        onClick={() => {
-                          const newDuration = bookingData.duration + 1;
-                          setBookingData({ ...bookingData, duration: newDuration });
-                          checkAvailability(bookingData.bookingDate, bookingData.pickupTime, newDuration);
-                        }}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="price-summary">
-                    <div className="price-item">
-                      <span>Price per Hour</span>
-                      <span>₹{selectedCar.pricePerHour}</span>
-                    </div>
-                    <div className="price-item total">
-                      <span>Total Price</span>
-                      <span>₹{selectedCar.pricePerHour * bookingData.duration}</span>
-                    </div>
-                  </div>
-
-                  {bookingError && (
-                    <div className="error-message">
-                      <FaTimes className="error-icon" />
-                      {bookingError}
-                    </div>
-                  )}
-
-                  <div className="booking-form-actions">
-                    <button
-                      type="button"
-                      className="cancel-button"
-                      onClick={() => setShowBookingForm(false)}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="book-now-button"
-                      disabled={!bookingData.bookingDate || !bookingData.pickupTime || bookingError}
-                    >
-                      Confirm Booking
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <button className="book-now-button" onClick={() => setShowBookingForm(true)}>
-                  Book Now
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
   };
 
   if (loading) {
@@ -974,7 +779,287 @@ const Home = ({ currentUser, userEmail, suggestedFilters }) => {
 
       {/* Car Detail Modal */}
       <AnimatePresence>
-        {selectedCar && renderCarDetails()}
+        {selectedCar && (
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={closeModal}
+          >
+            <motion.div
+              className="car-detail-modal"
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.9, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 50 }}
+              transition={{ type: "spring", damping: 25 }}
+            >
+              <button className="close-button" onClick={closeModal}>
+                <FaTimes />
+              </button>
+
+              <div className="modal-content">
+                <div className="modal-gallery">
+                  <div className="main-image-container">
+                    <img
+                      src={selectedCar.imageUrls && selectedCar.imageUrls[0] ? selectedCar.imageUrls[0] : 'https://via.placeholder.com/600x400?text=No+Image'}
+                      alt={`${selectedCar.carBrand} ${selectedCar.carModel}`}
+                      className="main-image"
+                    />
+                  </div>
+
+                  {selectedCar.imageUrls && selectedCar.imageUrls.length > 1 && (
+                    <div className="image-thumbnails">
+                      {selectedCar.imageUrls.map((url, idx) => (
+                        <div className="thumbnail" key={idx}>
+                          <img src={url} alt={`${selectedCar.carBrand} ${selectedCar.carModel} view ${idx}`} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="modal-details">
+                  <div className="car-header">
+                    <div className="car-title-section">
+                      <h2>{selectedCar.carBrand} {selectedCar.carModel}</h2>
+                      <div className="car-subtitle">
+                        <span className="year"><FaCalendarAlt /> {selectedCar.manufacturingYear}</span>
+                        <span className="location"><FaMapMarkerAlt /> {selectedCar.location}</span>
+                      </div>
+                    </div>
+                    <div className="price-badge">
+                      <span className="price-amount">₹{selectedCar.pricePerHour}</span>
+                      <span className="price-period">/hour</span>
+                    </div>
+                  </div>
+
+                  <div className="car-highlights">
+                    <div className="highlight">
+                      <div className="highlight-icon"><FaCar /></div>
+                      <div className="highlight-content">
+                        <span className="highlight-label">Type</span>
+                        <span className="highlight-value">{selectedCar.carType}</span>
+                      </div>
+                    </div>
+
+                    <div className="highlight">
+                      <div className="highlight-icon"><FaUsers /></div>
+                      <div className="highlight-content">
+                        <span className="highlight-label">Seats</span>
+                        <span className="highlight-value">{selectedCar.seatingCapacity}</span>
+                      </div>
+                    </div>
+
+                    <div className="highlight">
+                      <div className="highlight-icon"><FaGasPump /></div>
+                      <div className="highlight-content">
+                        <span className="highlight-label">Fuel</span>
+                        <span className="highlight-value">{selectedCar.fuelType}</span>
+                      </div>
+                    </div>
+
+                    <div className="highlight">
+                      <div className="highlight-icon"><FaCog /></div>
+                      <div className="highlight-content">
+                        <span className="highlight-label">Transmission</span>
+                        <span className="highlight-value">{selectedCar.transmission}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="car-details-section">
+                    <h3>About this car</h3>
+                    <div className="details-grid">
+                      <div className="detail-item">
+                        <span className="detail-label">License Plate</span>
+                        <span className="detail-value">{selectedCar.licensePlate}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Manufacturing Year</span>
+                        <span className="detail-value">{selectedCar.manufacturingYear}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Fuel Type</span>
+                        <span className="detail-value">{selectedCar.fuelType}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Transmission</span>
+                        <span className="detail-value">{selectedCar.transmission}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Seating Capacity</span>
+                        <span className="detail-value">{selectedCar.seatingCapacity} people</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Car Type</span>
+                        <span className="detail-value">{selectedCar.carType}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="booking-section">
+                    <div className="price-summary">
+                      <div className="price-item">
+                        <span>Hourly Rate</span>
+                        <span>₹{selectedCar.pricePerHour}</span>
+                      </div>
+                      <div className="price-item total">
+                        <span>Total (per hour)</span>
+                        <span>₹{selectedCar.pricePerHour}</span>
+                      </div>
+                    </div>
+
+                    {isUserOwnCar(selectedCar) ? (
+                      <button className="book-now-button" disabled style={{ opacity: 0.7, cursor: 'not-allowed' }}>
+                        Cannot Book Your Own Car
+                      </button>
+                    ) : bookingStatus === 'pending' ? (
+                      <button className="book-now-button" disabled style={{ opacity: 0.7, cursor: 'not-allowed' }}>
+                        Booking Request Pending
+                      </button>
+                    ) : !showBookingForm ? (
+                      <button
+                        className="book-now-button"
+                        onClick={handleBookClick}
+                      >
+                        Book This Car
+                      </button>
+                    ) : (
+                      <form onSubmit={handleSubmit} className="booking-form">
+                        <div className="form-group">
+                          <label htmlFor="bookingDate">Select Date</label>
+                          <div className="calendar-input-container">
+                            <input
+                              type="date"
+                              id="bookingDate"
+                              value={bookingData.bookingDate}
+                              onChange={(e) => {
+                                setBookingData({ ...bookingData, bookingDate: e.target.value });
+                                checkAvailability(e.target.value, bookingData.pickupTime, bookingData.duration);
+                              }}
+                              min={new Date().toISOString().split('T')[0]}
+                              required
+                              className="calendar-input"
+                            />
+                          </div>
+                          <div className="calendar-hint">Select a date for your booking</div>
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="pickupTime">Select Pickup Time</label>
+                          <input
+                            type="time"
+                            id="pickupTime"
+                            value={bookingData.pickupTime}
+                            onChange={(e) => {
+                              setBookingData({ ...bookingData, pickupTime: e.target.value });
+                              checkAvailability(bookingData.bookingDate, e.target.value, bookingData.duration);
+                            }}
+                            required
+                            className="time-input"
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="dropAddress">Drop-off Address</label>
+                          <textarea
+                            id="dropAddress"
+                            value={bookingData.dropAddress}
+                            onChange={(e) => setBookingData({ ...bookingData, dropAddress: e.target.value })}
+                            placeholder="Enter your drop-off address"
+                            required
+                            className="address-input"
+                            rows="3"
+                          />
+                          <div className="address-hint">Please provide the complete address where you'll drop off the car</div>
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="duration">Duration (hours)</label>
+                          <div className="duration-selector">
+                            <button
+                              type="button"
+                              className="duration-btn"
+                              onClick={() => {
+                                const newDuration = Math.max(1, bookingData.duration - 1);
+                                setBookingData({ ...bookingData, duration: newDuration });
+                                checkAvailability(bookingData.bookingDate, bookingData.pickupTime, newDuration);
+                              }}
+                              disabled={bookingData.duration <= 1}
+                            >
+                              -
+                            </button>
+                            <input
+                              type="number"
+                              id="duration"
+                              value={bookingData.duration}
+                              onChange={(e) => {
+                                const newDuration = Math.max(1, parseInt(e.target.value) || 1);
+                                setBookingData({ ...bookingData, duration: newDuration });
+                                checkAvailability(bookingData.bookingDate, bookingData.pickupTime, newDuration);
+                              }}
+                              min="1"
+                              required
+                              className="duration-input"
+                            />
+                            <button
+                              type="button"
+                              className="duration-btn"
+                              onClick={() => {
+                                const newDuration = bookingData.duration + 1;
+                                setBookingData({ ...bookingData, duration: newDuration });
+                                checkAvailability(bookingData.bookingDate, bookingData.pickupTime, newDuration);
+                              }}
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="price-summary">
+                          <div className="price-item">
+                            <span>Price per Hour</span>
+                            <span>₹{selectedCar.pricePerHour}</span>
+                          </div>
+                          <div className="price-item total">
+                            <span>Total Price</span>
+                            <span>₹{selectedCar.pricePerHour * bookingData.duration}</span>
+                          </div>
+                        </div>
+
+                        {bookingError && (
+                          <div className="error-message">
+                            <FaTimes className="error-icon" />
+                            {bookingError}
+                          </div>
+                        )}
+
+                        <div className="booking-form-actions">
+                          <button
+                            type="button"
+                            className="cancel-button"
+                            onClick={() => setShowBookingForm(false)}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            className="book-now-button"
+                            disabled={!bookingData.bookingDate || !bookingData.pickupTime || bookingError}
+                          >
+                            Confirm Booking
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );

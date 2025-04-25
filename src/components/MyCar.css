@@ -35,12 +35,19 @@
 
 .car-details {
   padding: 1.5rem;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .car-details h3 {
   margin: 0 0 0.5rem;
   font-size: 1.25rem;
   color: #333;
+  white-space: normal;
+  overflow: visible;
+  word-wrap: break-word;
 }
 
 .car-info {
@@ -49,6 +56,8 @@
   font-size: 0.9rem;
   color: #666;
   margin-bottom: 1rem;
+  white-space: normal;
+  word-wrap: break-word;
 }
 
 .car-price {
@@ -56,6 +65,8 @@
   font-weight: bold;
   color: #2c5282;
   margin: 0;
+  white-space: normal;
+  word-wrap: break-word;
 }
 
 .car-actions {
@@ -122,6 +133,19 @@
   max-width: 500px;
   overflow-y: auto;
   max-height: 90vh;
+}
+
+.modal-content {
+  padding: 1.5rem;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-content h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  white-space: normal;
+  word-wrap: break-word;
 }
 
 .loading-container {
@@ -345,4 +369,58 @@ input:checked + .slider:before {
   background: #4299e1;
   color: white;
   border: none;
+}
+
+@media screen and (max-width: 768px) {
+  .mycar-container {
+    padding: 1rem;
+    margin-top: 80px;
+  }
+
+  .car-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .car-image {
+    height: 180px;
+  }
+
+  .car-details {
+    padding: 1rem;
+  }
+
+  .car-actions {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .edit-btn, .delete-btn {
+    width: 100%;
+  }
+
+  .edit-modal {
+    width: 95%;
+    padding: 1rem;
+  }
+
+  .edit-modal form {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+
+  .renting-toggle {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
 }

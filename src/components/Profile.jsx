@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getDatabase, ref, onValue } from 'firebase/database';
+import { getDatabase, ref, onValue, remove } from 'firebase/database';
 import app from './Firebase';
 import './Profile.css';
 import { FaCar, FaMoneyBillWave, FaTruck, FaWallet, FaUser, FaCalendar, FaClock, FaMapMarkerAlt } from 'react-icons/fa';
@@ -132,6 +132,20 @@ const Profile = ({ currentUser, userEmail }) => {
       fetchProfileAndBookings();
     }
   }, [currentUser]);
+
+  const handleCancelBooking = async (bookingId) => {
+    if (window.confirm('Are you sure you want to cancel this booking?')) {
+      try {
+        const database = getDatabase(app);
+        const bookingRef = ref(database, `rentRequests/${bookingId}`);
+        await remove(bookingRef);
+        alert('Booking cancelled successfully');
+      } catch (error) {
+        console.error('Error cancelling booking:', error);
+        alert('Failed to cancel booking. Please try again.');
+      }
+    }
+  };
 
   if (loading) {
     return (
@@ -298,6 +312,14 @@ const Profile = ({ currentUser, userEmail }) => {
                       <span className="amount">₹{booking.totalPrice}</span>
                       <span className="period">total</span>
                     </div>
+                    {booking.status !== 'completed' && booking.status !== 'cancelled' && (
+                      <button
+                        className="cancel-booking-btn"
+                        onClick={() => handleCancelBooking(booking.id)}
+                      >
+                        Cancel Booking
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
